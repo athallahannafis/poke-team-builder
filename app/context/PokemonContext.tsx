@@ -7,6 +7,8 @@ import { PokemonCompiled } from "../types/Pokemon";
 type PokemonContextType = {
   limit: number;
   setLimit: React.Dispatch<React.SetStateAction<number>>;
+  offset: number;
+  setOffset: React.Dispatch<React.SetStateAction<number>>;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   listOfPokemon: PokemonCompiled[];
@@ -20,7 +22,8 @@ type PokemonContextType = {
 const PokemonContext = createContext<PokemonContextType | null>(null);
 
 export function PokemonProvider({ children }: { children: React.ReactNode }) {  
-  const [limit, setLimit] = useState<number>(20);
+  const [limit, setLimit] = useState<number>(40);
+  const [offset, setOffset] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
   const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>(() => {
@@ -61,7 +64,7 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    getlistOfPokemon(limit)
+    getlistOfPokemon(limit,offset)
       .then((data) =>
         /** 
          * after fetching data, check chosen pokemon (from localstorage)
@@ -74,7 +77,7 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
       )
       .catch((err) => console.error("Failed to fetch pokemon list:", err))
       .finally(() => setIsLoading(false));
-  }, [limit]);
+  }, [limit, offset]);
 
   function removePokemon(name: string) {
         setChosenPokemon((prev) => prev.filter((p) => p.name !== name));
@@ -87,6 +90,8 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
     <PokemonContext.Provider value={{
       limit,
       setLimit,
+      offset,
+      setOffset,
       isLoading,
       setIsLoading,
       listOfPokemon,
