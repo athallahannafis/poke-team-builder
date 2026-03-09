@@ -1,5 +1,5 @@
 import { usePokemonContext } from "@/app/context/PokemonContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export default function useLandingHooks() {
     const PAGE_STEP = 20;
@@ -7,8 +7,7 @@ export default function useLandingHooks() {
         const bottomRef = useRef<HTMLDivElement>(null);
         const topRef = useRef<HTMLDivElement>(null);
         const wasTopLoad = useRef(false);
-        const [isTopLoading, setIsTopLoading] = useState(false);
-
+        const wasBottomLoad = useRef(false);
         // Bottom observer — slide window forward by one page
         useEffect(() => {
             if (isLoading) return;
@@ -17,6 +16,7 @@ export default function useLandingHooks() {
                 if (entry.isIntersecting) {
                     setIsLoading(true);
                     setTimeout(() => {
+                        wasBottomLoad.current = true;
                         setOffset((prev) => prev + PAGE_STEP);
                     }, 1000);
                 }
@@ -33,7 +33,6 @@ export default function useLandingHooks() {
     
             const observer = new IntersectionObserver(([entry]) => {
                 if (entry.isIntersecting) {
-                    setIsTopLoading(true);
                     setIsLoading(true);
                     setTimeout(() => {
                         wasTopLoad.current = true;
@@ -50,10 +49,20 @@ export default function useLandingHooks() {
         useEffect(() => {
             if (isLoading || !wasTopLoad.current) return;
             wasTopLoad.current = false;
-            setIsTopLoading(false);
-            document.getElementById(`index-${offset-10}`)
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            document.getElementById(`index-${8}`)
                 ?.scrollIntoView({ behavior: 'instant', block: 'center' });
         }, [isLoading]);
 
-        return { topRef, bottomRef, isTopLoading };
+        // After a bottom-triggered load finishes, scroll to the middle of the rendered list
+        useEffect(() => {
+            if (isLoading || !wasBottomLoad.current) return;
+            wasBottomLoad.current = false;
+            setIsLoading(false);
+        
+            document.getElementById(`index-${30}`)
+                ?.scrollIntoView({ behavior: 'instant', block: 'center' });
+        }, [isLoading, setIsLoading]);
+
+        return { topRef, bottomRef, wasBottomLoad, wasTopLoad };
 }
