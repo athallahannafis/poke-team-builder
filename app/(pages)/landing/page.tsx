@@ -16,13 +16,10 @@ const Landing = () => {
 
     return (
         <div className="flex flex-wrap gap-3 py-5 justify-center">
-            {listOfPokemon.map((pokemon) => (
+            {listOfPokemon.map((pokemon, index) => (
                 <PokemonCard
-                    key={pokemon.name}
-                    name={pokemon.name}
-                    sprite={pokemon.sprite}
-                    types={pokemon.types}
-                    exp={pokemon.exp}
+                    key={`pokemon-${index}`}
+                    pokemon={pokemon}
                 />
             ))}
         </div>
