@@ -9,9 +9,11 @@ type PokemonContextType = {
   setLimit: React.Dispatch<React.SetStateAction<number>>;
   isLoading: boolean;
   listOfPokemon: PokemonCompiled[];
+  setListOfPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   chosenPokemon: PokemonCompiled[];
   setChosenPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   addPokemonToTeam: (pokemon: PokemonCompiled) => void;
+  removePokemon: (name: string) => void;
 };
 
 const PokemonContext = createContext<PokemonContextType | null>(null);
@@ -63,15 +65,24 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, [limit]);
 
+  function removePokemon(name: string) {
+        setChosenPokemon((prev) => prev.filter((p) => p.name !== name));
+        setListOfPokemon((list) =>
+            list.map((p) => (p.name === name ? { ...p, chosen: false } : p))
+        );
+    }
+
   return (
     <PokemonContext.Provider value={{
       limit,
       setLimit,
       isLoading,
       listOfPokemon,
+      setListOfPokemon,
       chosenPokemon,
       setChosenPokemon,
       addPokemonToTeam,
+      removePokemon,
     }}>
       {children}
     </PokemonContext.Provider>
