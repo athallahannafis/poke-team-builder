@@ -50,7 +50,7 @@ export default function useLandingHooks() {
             if (isLoading || !wasTopLoad.current) return;
             wasTopLoad.current = false;
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            document.getElementById(`index-${8}`)
+            document.getElementById(`index-${21}`)
                 ?.scrollIntoView({ behavior: 'instant', block: 'center' });
         }, [isLoading]);
 
@@ -60,7 +60,7 @@ export default function useLandingHooks() {
             wasBottomLoad.current = false;
             setIsLoading(false);
         
-            document.getElementById(`index-${30}`)
+            document.getElementById(`index-${19}`)
                 ?.scrollIntoView({ behavior: 'instant', block: 'center' });
         }, [isLoading, setIsLoading]);
 
