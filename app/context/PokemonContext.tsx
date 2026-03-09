@@ -48,20 +48,19 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   }, [chosenPokemon]);
 
   const addPokemonToTeam = useCallback((pokemon: PokemonCompiled) => {
-    setChosenPokemon((prev) => {
-      if (prev.length >= 6) {
+    if (chosenPokemon.length >= 6) {
         alert("You can only choose up to 6 pokemon!");
-        return prev;
-      }
-
-      // update the existing list of pokemon to mark this one as chosen
-      setListOfPokemon((list) =>
-        list.map((p) => p.name === pokemon.name ? { ...p, chosen: true } : p)
-      );
-      // add item to chosen pokemon list
-      return [...prev, { ...pokemon, chosen: true }];
-    });
-  }, []);
+    } else {
+      setChosenPokemon((prev) => {
+        // update the existing list of pokemon to mark this one as chosen
+        setListOfPokemon((list) =>
+          list.map((p) => p.name === pokemon.name ? { ...p, chosen: true } : p)
+        );
+        // add item to chosen pokemon list
+        return [...prev, { ...pokemon, chosen: true }]
+      });
+    }
+  }, [chosenPokemon]);
 
   useEffect(() => {
     getlistOfPokemon(limit,offset)
