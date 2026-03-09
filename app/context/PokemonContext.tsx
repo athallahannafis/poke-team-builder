@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { getlistOfPokemon } from "../services/pokemon";
 import { PokemonCompiled } from "../types/Pokemon";
 
@@ -20,7 +20,23 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const [limit, setLimit] = useState<number>(20);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
-  const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>([]);
+  const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("chosenPokemon");
+      return stored ? (JSON.parse(stored) as PokemonCompiled[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Keep a ref of chosen names so the fetch effect can read them without re-running
+  const chosenNamesRef = useRef(new Set(chosenPokemon.map((p) => p.name)));
+
+  useEffect(() => {
+    chosenNamesRef.current = new Set(chosenPokemon.map((p) => p.name));
+    localStorage.setItem("chosenPokemon", JSON.stringify(chosenPokemon));
+  }, [chosenPokemon]);
 
   const addPokemonToTeam = useCallback((pokemon: PokemonCompiled) => {
     setChosenPokemon((prev) => {
@@ -36,8 +52,13 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // setIsLoading(true);
     getlistOfPokemon(limit)
-      .then((data) => setListOfPokemon(data))
+      .then((data) =>
+        setListOfPokemon(
+          data.map((p) => ({ ...p, chosen: chosenNamesRef.current.has(p.name) }))
+        )
+      )
       .catch((err) => console.error("Failed to fetch pokemon list:", err))
       .finally(() => setIsLoading(false));
   }, [limit]);
