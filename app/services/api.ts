@@ -7,4 +7,11 @@ const api = axios.create({
   },
 });
 
-export default api;
+const emptyUrlApi = axios.create({
+  baseURL: "",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export { api, emptyUrlApi };

@@ -1,21 +1,29 @@
 'use client';
 
+import PokemonCard from "@/app/component/PokemonCard";
+import { usePokemonContext } from "@/app/context/PokemonContext";
 import { getlistOfPokemon } from "@/app/services/pokemon";
 import { useEffect } from "react";
 
 const Landing = () => {
 
+    const { listOfPokemon  } = usePokemonContext();
+
     useEffect(() => {
-        getlistOfPokemon(10).then(pokemonList => {
-            console.log(pokemonList);
-        }).catch(err => {
-            console.error(err);
-        });
-    }, [])
+        console.log(listOfPokemon);
+    }, [listOfPokemon])
 
     return (
-        <div>
-            Landing page
+        <div className="flex flex-wrap gap-3 py-5 justify-center">
+            {listOfPokemon.map((pokemon) => (
+                <PokemonCard 
+                    key={pokemon.name}
+                    name={pokemon.name}
+                    sprite={pokemon.sprite}
+                    types={pokemon.types}
+                    exp={pokemon.exp}
+                />
+            ))}
         </div>
     )
 }

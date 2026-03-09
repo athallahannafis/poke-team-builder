@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
+import { PokemonProvider } from "./context/PokemonContext";
 
 const lato = Lato({
   variable: "--font-lato",
@@ -32,9 +33,11 @@ export default function RootLayout({
       <body
         className={`${lato.variable} antialiased bg-zinc-100`}
       >
-        <div className="mx-auto w-full max-w-[425px] min-w-[425px] min-h-[4000px] bg-white shadow-xl">
-          {children}
-        </div>
+        <PokemonProvider>
+          <div className="mx-auto w-full max-w-[425px] min-w-[425px] min-h-screen bg-white shadow-xl">
+            {children}
+          </div>
+        </PokemonProvider>
       </body>
     </html>
   );
