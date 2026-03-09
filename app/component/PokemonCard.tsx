@@ -17,12 +17,12 @@ const PokemonCard = ({ pokemon }: { pokemon: PokemonCompiled }) => {
                 <p>Types: {types.map((typeInfo: TypeInfo) => typeInfo.type.name).join(", ")}</p>
                 <p>Base Experience: {exp}</p>
             </div>
-            <button 
-            onClick={() => {
-                addPokemonToTeam(pokemon);
-            }}
-            className="bg-gray-300 text-black font-bold rounded-lg px-4 py-2 w-full active:scale-95 transition-transform duration-100">
-                Add to Team
+            <button
+                onClick={() => addPokemonToTeam(pokemon)}
+                disabled={pokemon.chosen}
+                className="font-bold rounded-lg px-4 py-2 w-full transition-all duration-100 disabled:opacity-50 active:not-disabled:scale-95 bg-gray-300 text-black"
+            >
+                {pokemon.chosen ? "Added" : "Add to Team"}
             </button>
         </div>
     );

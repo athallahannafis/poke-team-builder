@@ -38,6 +38,7 @@ const getlistOfPokemon = async (limit: number) => {
             sprite: statsData.sprite ?? "",
             types: statsData.types ?? [],
             exp: statsData.exp ?? 0,
+            chosen: false,
         };
     }));
 

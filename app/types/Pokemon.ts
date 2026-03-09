@@ -3,6 +3,7 @@ export type PokemonCompiled = {
     sprite: string; // data.sprites.front_default
     types: TypeInfo[]; // data.types
     exp: number; // data.base_experience
+    chosen: boolean; // whether the pokemon is chosen for the team
 }
 
 

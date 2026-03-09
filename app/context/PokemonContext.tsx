@@ -28,7 +28,10 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
         alert("You can only choose up to 6 pokemon!");
         return prev;
       }
-      return [...prev, pokemon];
+      setListOfPokemon((list) =>
+        list.map((p) => p.name === pokemon.name ? { ...p, chosen: true } : p)
+      );
+      return [...prev, { ...pokemon, chosen: true }];
     });
   }, []);
 
