@@ -8,7 +8,7 @@ import { PokemonCompiled } from "../types/Pokemon";
 const TEAM_SIZE = 6;
 
 const TeamSheet = () => {
-    const { chosenPokemon, setChosenPokemon, setListOfPokemon, removePokemon } = usePokemonContext();
+    const { chosenPokemon, removePokemon } = usePokemonContext();
 
     const slots: (PokemonCompiled | null)[] = [
         ...chosenPokemon,
