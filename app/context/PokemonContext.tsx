@@ -8,6 +8,7 @@ type PokemonContextType = {
   limit: number;
   setLimit: React.Dispatch<React.SetStateAction<number>>;
   isLoading: boolean;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   listOfPokemon: PokemonCompiled[];
   setListOfPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   chosenPokemon: PokemonCompiled[];
@@ -32,11 +33,14 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Keep a ref of chosen names so the fetch effect can read them without re-running
-  const chosenNamesRef = useRef(new Set(chosenPokemon.map((p) => p.name)));
+  // Keep a ref of chosen names so the fetch effect can read them without re-running.
+  // set of pokemon names that are currently chosen, 
+  // used to mark pokemon as chosen when fetching new batches without causing re-renders
+  const chosenNamesRef = useRef<string[]>(chosenPokemon.map((p) => p.name));
 
   useEffect(() => {
-    chosenNamesRef.current = new Set(chosenPokemon.map((p) => p.name));
+    // update the ref and localStorage whenever chosenPokemon changes
+    chosenNamesRef.current = chosenPokemon.map((p) => p.name);
     localStorage.setItem("chosenPokemon", JSON.stringify(chosenPokemon));
   }, [chosenPokemon]);
 
@@ -46,19 +50,26 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
         alert("You can only choose up to 6 pokemon!");
         return prev;
       }
+
+      // update the existing list of pokemon to mark this one as chosen
       setListOfPokemon((list) =>
         list.map((p) => p.name === pokemon.name ? { ...p, chosen: true } : p)
       );
+      // add item to chosen pokemon list
       return [...prev, { ...pokemon, chosen: true }];
     });
   }, []);
 
   useEffect(() => {
-    // setIsLoading(true);
     getlistOfPokemon(limit)
       .then((data) =>
+        /** 
+         * after fetching data, check chosen pokemon (from localstorage)
+         * based on set of chosenNamesRef set, and update the chosen flag
+         * from listOfPokemon accordingly
+         */
         setListOfPokemon(
-          data.map((p) => ({ ...p, chosen: chosenNamesRef.current.has(p.name) }))
+          data.map((p) => ({ ...p, chosen: chosenNamesRef.current.includes(p.name) }))
         )
       )
       .catch((err) => console.error("Failed to fetch pokemon list:", err))
@@ -77,6 +88,7 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
       limit,
       setLimit,
       isLoading,
+      setIsLoading,
       listOfPokemon,
       setListOfPokemon,
       chosenPokemon,
