@@ -2,7 +2,9 @@
 import Image from "next/image";
 import Landing from "./(pages)/landing/page";
 import { usePokemonContext } from "./context/PokemonContext";
+import TeamFooter from "./component/TeamFooter";
 import pokeball from "@/public/pokeball.svg";
+import ButtonFooter from "./component/ButtonFooter";
 
 export default function RootContent() {
   const {chosenPokemon} = usePokemonContext();
@@ -14,9 +16,10 @@ export default function RootContent() {
           <Image src={pokeball} alt="Pokeball icon" width={24} height={24}/>
           {chosenPokemon.length}
         </div>
-
       </nav>
       <Landing/>
+      {/* <TeamFooter/> */}
+      <ButtonFooter/>
     </>
   );
 }
