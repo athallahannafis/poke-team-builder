@@ -1,22 +1,8 @@
 import { Pokemon, PokemonCompiled, PokemonStats } from "../types/Pokemon";
 import { emptyUrlApi, api } from "./api";
 
-
-// const getPokemonByName = async (name: string) => {
-//     const res = await api.get(`/pokemon/${name}`);
-//     if (res.status !== 200) {
-//         throw new Error("Failed to fetch pokemon");
-//     }
-//     const data = await res.data;
-//     return {
-//         name: data.name,
-//         imageUrl: data.sprites.front_default,
-//         types: data.types.map((typeInfo: any) => typeInfo.type.name),
-//     };
-// }
-
-const getlistOfPokemon = async (limit: number) => {
-    const res  = await api.get(`/pokemon?limit=${limit}`);
+const getlistOfPokemon = async (limit: number, offset: number) => {
+    const res  = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
     if (res.status !== 200) {
         throw new Error("Failed to fetch pokemon list");
     }
