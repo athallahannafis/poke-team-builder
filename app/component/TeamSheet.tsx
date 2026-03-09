@@ -52,7 +52,7 @@ const TeamSheet = () => {
                                 </button>
                             </>
                         ) : (
-                            <span className="w-full text-zinc-300 text-xl h-[78px] flex items-center text-center justify-center">Empty Slot</span>
+                            <span className="w-full text-zinc-300 text-xl h-[76px] flex items-center text-center justify-center">Empty Slot</span>
                         )}
                     </div>
                 ))}
