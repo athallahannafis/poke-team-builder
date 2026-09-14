@@ -3,7 +3,7 @@ export default function TestPage() {
     <main>
       <h1>Test Page</h1>
       <p>Testing new branch PR for Platform AI</p>
-      <p>Test review otomatis pake webhook github dan platform-ai setelah komentar AI</p>
+      <p>Coba lagi review otomatis</p>
     </main>
   );
 }
