@@ -4,7 +4,6 @@ export default function TestPage() {
       <h1>Test Page</h1>
       <p>Testing new branch PR for Platform AI</p>
       <p>Coba lagi review otomatis lagi changes</p>
-      
     </main>
   );
 }
