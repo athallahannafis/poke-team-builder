@@ -6,7 +6,7 @@ import { POKEMON_TYPES } from "../types/Pokemon";
 const formatTypeName = (type: string) => type.charAt(0).toUpperCase() + type.slice(1);
 
 const PokemonFilter = () => {
-    const { typeFilter, setTypeFilter, setOffset } = usePokemonContext();
+    const { typeFilter, setTypeFilter, setOffset, isLoading } = usePokemonContext();
 
     function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
         const nextFilter = event.target.value as PokemonFilterValue;
@@ -23,6 +23,7 @@ const PokemonFilter = () => {
                 id="pokemon-type-filter"
                 value={typeFilter}
                 onChange={handleChange}
+                disabled={isLoading}
                 className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             >
                 <option value="all">All elements</option>
