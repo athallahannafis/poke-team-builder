@@ -10,6 +10,7 @@ const PokemonFilter = () => {
 
     function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
         const nextFilter = event.target.value as PokemonFilterValue;
+        setIsLoading(true);
         setTypeFilter(nextFilter);
         setOffset(0);
     }
