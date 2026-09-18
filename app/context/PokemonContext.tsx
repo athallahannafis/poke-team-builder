@@ -84,7 +84,12 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
           data.map((p) => ({ ...p, chosen: chosenNamesRef.current.includes(p.name) }))
         );
       })
-      .catch((err) => console.error("Failed to fetch pokemon list:", err))
+      .catch((err) => {
+        if (!isCancelled) {
+          console.error("Failed to fetch pokemon list:", err);
+          // Disarankan menyimpan errorMessage ke state agar UI dapat menampilkan feedback
+        }
+      })
       .finally(() => {
         if (!isCancelled) setIsLoading(false);
       });
