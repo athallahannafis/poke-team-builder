@@ -6,7 +6,7 @@ import { POKEMON_TYPES } from "../types/Pokemon";
 const formatTypeName = (type: string) => type.charAt(0).toUpperCase() + type.slice(1);
 
 const PokemonFilter = () => {
-    const { typeFilter, setTypeFilter, setOffset, setIsLoading } = usePokemonContext();
+    const { typeFilter, setTypeFilter, setOffset } = usePokemonContext();
 
     function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
         const nextFilter = event.target.value as PokemonFilterValue;
