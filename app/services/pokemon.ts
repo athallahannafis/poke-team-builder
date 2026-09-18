@@ -1,14 +1,40 @@
-import { Pokemon, PokemonCompiled, PokemonStats } from "../types/Pokemon";
+import { Pokemon, PokemonCompiled, PokemonStats, PokemonType } from "../types/Pokemon";
 import { emptyUrlApi, api } from "./api";
 
-const getlistOfPokemon = async (limit: number, offset: number) => {
-    const res  = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
-    if (res.status !== 200) {
-        throw new Error("Failed to fetch pokemon list");
-    }
-    const data: { results: Pokemon[] } = await res.data;
+type PokemonTypeResponse = {
+    pokemon: Array<{
+        pokemon: Pokemon;
+    }>;
+};
 
-    const compiledList: PokemonCompiled[] = await Promise.all(data.results.map(async(item) => {
+const getlistOfPokemon = async (
+    limit: number,
+    offset: number,
+    type: PokemonType | "all" = "all",
+) => {
+    let results: Pokemon[];
+
+    if (type === "all") {
+        const res = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
+        if (res.status !== 200) {
+            throw new Error("Failed to fetch pokemon list");
+        }
+
+        const data: { results: Pokemon[] } = res.data;
+        results = data.results;
+    } else {
+        const res = await api.get(`/type/${type}`);
+        if (res.status !== 200) {
+            throw new Error("Failed to fetch pokemon by type");
+        }
+
+        const data: PokemonTypeResponse = res.data;
+        results = data.pokemon
+            .slice(offset, offset + limit)
+            .map(({ pokemon }) => pokemon);
+    }
+
+    const compiledList: PokemonCompiled[] = await Promise.all(results.map(async(item) => {
         const statsResponse = await emptyUrlApi.get(item.url);
         if (statsResponse.status !== 200) {
             throw new Error("Failed to fetch pokemon stats");
