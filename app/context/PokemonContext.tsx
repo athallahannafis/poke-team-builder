@@ -70,6 +70,7 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isCancelled = false;
 
+    setIsLoading(true);
     getlistOfPokemon(limit, offset, typeFilter)
       .then((data) => {
         if (isCancelled) return;
