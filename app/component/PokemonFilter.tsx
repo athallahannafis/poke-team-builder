@@ -24,7 +24,7 @@ const PokemonFilter = () => {
                 value={typeFilter}
                 onChange={handleChange}
                 disabled={isLoading}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
             >
                 <option value="all">All elements</option>
                 {POKEMON_TYPES.map((type) => (
