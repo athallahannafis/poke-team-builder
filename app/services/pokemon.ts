@@ -29,7 +29,7 @@ const getlistOfPokemon = async (
         }
 
         const data: PokemonTypeResponse = res.data;
-        results = data.pokemon
+        results = (data.pokemon ?? [])
             .slice(offset, offset + limit)
             .map(({ pokemon }) => pokemon);
     }
