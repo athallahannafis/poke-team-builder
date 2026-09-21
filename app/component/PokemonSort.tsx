@@ -14,7 +14,7 @@ const PokemonSort = () => {
     }
 
     return (
-        <div className="border-b border-zinc-200 bg-white px-4 py-3">
+        <div className="mx-auto w-full max-w-[425px] border-b border-zinc-200 bg-white px-4 py-3">
             <label htmlFor="pokemon-sort" className="mb-1 block text-sm font-bold text-zinc-700">
                 Sort Pokémon
             </label>
