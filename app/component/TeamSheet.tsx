@@ -44,7 +44,7 @@ const TeamSheet = () => {
                                     </span>
                                 </div>
                                 <button
-                                    onClick={() => removePokemon(pokemon.name)}
+                                    onClick={() => chosenPokemon.forEach((member) => removePokemon(member.name))}
                                     className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-gray-700 transition-colors mr-5"
                                     aria-label={`Remove ${pokemon.name}`}
                                 >
