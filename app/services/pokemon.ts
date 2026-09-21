@@ -11,35 +11,33 @@ const getlistOfPokemon = async (
     limit: number,
     offset: number,
     type: PokemonType | "all" = "all",
+    signal?: AbortSignal,
 ) => {
     let results: Pokemon[];
 
     if (type === "all") {
-        const res = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
+        const res = await api.get(`/pokemon?limit=${limit}&offset=${offset}`, { signal });
         if (res.status !== 200) {
             throw new Error("Failed to fetch pokemon list");
         }
-
         const data: { results: Pokemon[] } = res.data;
         results = data.results;
     } else {
-        const res = await api.get(`/type/${type}`);
+        const res = await api.get(`/type/${type}`, { signal });
         if (res.status !== 200) {
             throw new Error("Failed to fetch pokemon by type");
         }
-
         const data: PokemonTypeResponse = res.data;
         results = data.pokemon
             .slice(offset, offset + limit)
             .map(({ pokemon }) => pokemon);
     }
 
-    const settled = await Promise.allSettled(results.map(async(item) => {
-        const statsResponse = await emptyUrlApi.get(item.url);
+    const settled = await Promise.allSettled(results.map(async (item) => {
+        const statsResponse = await emptyUrlApi.get(item.url, { signal });
         if (statsResponse.status !== 200) {
             throw new Error("Failed to fetch pokemon stats");
         }
-
         const rawData = statsResponse.data;
         const spriteUrl = rawData.sprites?.front_default ?? "";
         return {
