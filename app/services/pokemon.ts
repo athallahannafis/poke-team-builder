@@ -103,7 +103,7 @@ const getlistOfPokemon = async (
 
     if (sortBy === "name") {
         const catalog = await getSortedPokemonCatalog();
-        results = catalog;
+        results = catalog.slice(offset, offset + limit);
     } else {
         const res = await api.get<PokemonListResponse>(`/pokemon?limit=${limit}&offset=${offset}`);
         if (res.status !== 200) {
