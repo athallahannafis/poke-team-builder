@@ -11,6 +11,9 @@ const PokemonSort = () => {
         setIsLoading(true);
         setSortBy(nextSort);
         setOffset(0);
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     return (
