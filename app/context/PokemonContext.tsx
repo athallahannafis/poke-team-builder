@@ -26,7 +26,7 @@ const PokemonContext = createContext<PokemonContextType | null>(null);
 export function PokemonProvider({ children }: { children: React.ReactNode }) {  
   const [limit, setLimit] = useState<number>(40);
   const [offset, setOffset] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<PokemonSort>("name");
+  const [sortBy, setSortBy] = useState<PokemonSort>("pokedex");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
   const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>(() => {
