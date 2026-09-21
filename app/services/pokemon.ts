@@ -40,12 +40,15 @@ const getlistOfPokemon = async (
             throw new Error("Failed to fetch pokemon stats");
         }
 
-        const statsData: PokemonStats = statsResponse.data;
+        const rawData = statsResponse.data;
+        const spriteUrl = rawData.sprites?.front_default ?? "";
         return {
-            id: statsData.id,
+            id: rawData.id,
             name: item.name,
-            types: statsData.types,
-            image: statsData.sprites.front_default,
+            types: rawData.types ?? [],
+            sprite: spriteUrl,
+            image: spriteUrl,
+            exp: rawData.base_experience ?? 0,
             url: item.url,
             chosen: false,
         };

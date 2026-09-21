@@ -87,7 +87,7 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
       .catch((err) => {
         if (!isCancelled) {
           console.error("Failed to fetch pokemon list:", err);
-          // Disarankan menyimpan errorMessage ke state agar UI dapat menampilkan feedback
+          setListOfPokemon([]);
         }
       })
       .finally(() => {
