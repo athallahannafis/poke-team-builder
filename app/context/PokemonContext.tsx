@@ -82,7 +82,11 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
         );
       })
       .catch((err) => console.error("Failed to fetch pokemon list:", err))
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
 
     return () => {
       isCancelled = true;
