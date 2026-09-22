@@ -32,7 +32,6 @@ const PokemonSort = () => {
                 <option value="pokedex">Pokédex number</option>
             </select>
         </div>
-        
     );
 };
 
