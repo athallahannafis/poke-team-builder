@@ -4,11 +4,10 @@ import { usePokemonContext } from "../context/PokemonContext";
 import { PokemonSort as PokemonSortValue } from "../types/Pokemon";
 
 const PokemonSort = () => {
-    const { sortBy, setSortBy, setOffset, setIsLoading, isLoading } = usePokemonContext();
+    const { sortBy, setSortBy, setOffset, isLoading } = usePokemonContext();
 
     function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
         const nextSort = event.target.value as PokemonSortValue;
-        setIsLoading(true);
         setSortBy(nextSort);
         setOffset(0);
         if (typeof window !== 'undefined') {
