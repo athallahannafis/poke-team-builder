@@ -52,11 +52,11 @@ async function getSortedPokemonCatalog(): Promise<Pokemon[]> {
             ? countResponse
             : await api.get<PokemonListResponse>(`/pokemon?limit=${count}&offset=0`);
 
-        if (catalogResponse.status !== 200) {
+        if (catalogResponse.status !== 200 || !catalogResponse.data?.results) {
             throw new Error("Failed to fetch pokemon catalog");
         }
 
-        return sortPokemonByName(catalogResponse.data.results);
+        return sortPokemonByName(catalogResponse.data.results ?? []);
     })().catch((error) => {
         // Allow a later render to retry if the catalog request failed.
         sortedPokemonCatalog = null;
