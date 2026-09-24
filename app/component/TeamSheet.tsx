@@ -10,9 +10,9 @@ const TEAM_SIZE = 6;
 const TeamSheet = () => {
     const { chosenPokemon, removePokemon } = usePokemonContext();
 
-    const slots: (PokemonCompiled | null)[] = [
-        ...chosenPokemon,
-        ...Array(TEAM_SIZE - chosenPokemon.length).fill(null),
+     const slots: (PokemonCompiled | null)[] = [
+        ...chosenPokemon.slice(0, TEAM_SIZE),
+        ...Array(Math.max(0, TEAM_SIZE - chosenPokemon.length)).fill(null),
     ];
 
     return (

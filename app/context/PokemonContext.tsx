@@ -26,11 +26,13 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const [offset, setOffset] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
-  const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>(() => {
+    const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>(() => {
     if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem("chosenPokemon");
-      return stored ? (JSON.parse(stored) as PokemonCompiled[]) : [];
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? (parsed as PokemonCompiled[]) : [];
     } catch {
       return [];
     }
@@ -47,20 +49,21 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("chosenPokemon", JSON.stringify(chosenPokemon));
   }, [chosenPokemon]);
 
-  const addPokemonToTeam = useCallback((pokemon: PokemonCompiled) => {
-    if (chosenPokemon.length >= 6) {
+   const addPokemonToTeam = useCallback((pokemon: PokemonCompiled) => {
+    setChosenPokemon((prev) => {
+      if (prev.length >= 6) {
         alert("You can only choose up to 6 pokemon!");
-    } else {
-      setChosenPokemon((prev) => {
-        // update the existing list of pokemon to mark this one as chosen
-        setListOfPokemon((list) =>
-          list.map((p) => p.name === pokemon.name ? { ...p, chosen: true } : p)
-        );
-        // add item to chosen pokemon list
-        return [...prev, { ...pokemon, chosen: true }]
-      });
-    }
-  }, [chosenPokemon]);
+        return prev;
+      }
+      if (prev.some((p) => p.name === pokemon.name)) {
+        return prev;
+      }
+      return [...prev, { ...pokemon, chosen: true }];
+    });
+    setListOfPokemon((list) =>
+      list.map((p) => (p.name === pokemon.name ? { ...p, chosen: true } : p))
+    );
+  }, []);
 
   useEffect(() => {
     getlistOfPokemon(limit,offset)
