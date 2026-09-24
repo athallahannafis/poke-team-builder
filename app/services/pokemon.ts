@@ -9,6 +9,10 @@ const getlistOfPokemon = async (limit: number, offset: number) => {
     const data: { results: Pokemon[] } = await res.data;
 
     const compiledList: PokemonCompiled[] = await Promise.all(data.results.map(async(item) => {
+        const parsedUrl = new URL(item.url);
+        if (parsedUrl.origin !== "https://pokeapi.co" || !parsedUrl.pathname.startsWith("/api/v2/pokemon/")) {
+            throw new Error("URL Pokemon tidak valid atau tidak tepercaya");
+        }
         const statsResponse = await emptyUrlApi.get(item.url);
         if (statsResponse.status !== 200) {
             throw new Error("Failed to fetch pokemon stats");
