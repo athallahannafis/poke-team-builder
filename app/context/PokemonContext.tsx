@@ -65,20 +65,26 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  useEffect(() => {
-    getlistOfPokemon(limit,offset)
-      .then((data) =>
-        /** 
-         * after fetching data, check chosen pokemon (from localstorage)
-         * based on set of chosenNamesRef set, and update the chosen flag
-         * from listOfPokemon accordingly
-         */
-        setListOfPokemon(
-          data.map((p) => ({ ...p, chosen: chosenNamesRef.current.includes(p.name) }))
-        )
-      )
-      .catch((err) => console.error("Failed to fetch pokemon list:", err))
-      .finally(() => setIsLoading(false));
+    useEffect(() => {
+    let isCurrent = true;
+    getlistOfPokemon(limit, offset)
+      .then((data) => {
+        if (isCurrent) {
+          setListOfPokemon(
+            data.map((p) => ({ ...p, chosen: chosenNamesRef.current.includes(p.name) }))
+          );
+        }
+      })
+      .catch((err) => {
+        if (isCurrent) console.error("Failed to fetch pokemon list:", err);
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [limit, offset]);
 
   function removePokemon(name: string) {

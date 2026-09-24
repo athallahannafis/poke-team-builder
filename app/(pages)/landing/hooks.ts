@@ -11,11 +11,12 @@ export default function useLandingHooks() {
         // Bottom observer — slide window forward by one page
         useEffect(() => {
             if (isLoading) return;
+            let timerId: NodeJS.Timeout;
     
             const observer = new IntersectionObserver(([entry]) => {
                 if (entry.isIntersecting) {
                     setIsLoading(true);
-                    setTimeout(() => {
+                    timerId = setTimeout(() => {
                         wasBottomLoad.current = true;
                         setOffset((prev) => prev + PAGE_STEP);
                     }, 1000);
@@ -23,7 +24,10 @@ export default function useLandingHooks() {
             });
     
             if (bottomRef.current) observer.observe(bottomRef.current);
-            return () => observer.disconnect();
+            return () => {
+                clearTimeout(timerId);
+                observer.disconnect();
+            };
         }, [isLoading, setIsLoading, setOffset]);
     
         // Top observer — slide window backward by one page (only when not already at the start)
