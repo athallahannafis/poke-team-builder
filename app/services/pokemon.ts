@@ -78,9 +78,9 @@ async function getPokemonDetails(item: Pokemon): Promise<PokemonCompiled> {
 
             return {
                 name: item.name,
-                sprite: statsResponse.data.sprites.front_default ?? "",
-                types: statsResponse.data.types ?? [],
-                exp: statsResponse.data.base_experience ?? 0,
+                sprite: statsResponse.data?.sprites?.front_default ?? "",
+                types: statsResponse.data?.types ?? [],
+                exp: statsResponse.data?.base_experience ?? 0,
                 chosen: false,
             };
         })
