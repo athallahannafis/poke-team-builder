@@ -19,6 +19,8 @@ type PokemonContextType = {
   setChosenPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   addPokemonToTeam: (pokemon: PokemonCompiled) => void;
   removePokemon: (name: string) => void;
+
+  
 };
 
 const PokemonContext = createContext<PokemonContextType | null>(null);
