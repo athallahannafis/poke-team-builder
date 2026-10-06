@@ -1,5 +1,5 @@
 import { Pokemon, PokemonCompiled, PokemonStats } from "../types/Pokemon";
-import { emptyUrlApi, api } from "./api";
+import { api, getPokeApiPokemonPath } from "./api";
 
 const getlistOfPokemon = async (limit: number, offset: number) => {
     const res  = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
@@ -9,7 +9,8 @@ const getlistOfPokemon = async (limit: number, offset: number) => {
     const data: { results: Pokemon[] } = await res.data;
 
     const compiledList: PokemonCompiled[] = await Promise.all(data.results.map(async(item) => {
-        const statsResponse = await emptyUrlApi.get(item.url);
+        const pokemonPath = getPokeApiPokemonPath(item.url);
+        const statsResponse = await api.get(pokemonPath);
         if (statsResponse.status !== 200) {
             throw new Error("Failed to fetch pokemon stats");
         }
