@@ -1,120 +1,71 @@
-import { Pokemon, PokemonCompiled, PokemonSort, TypeInfo } from "../types/Pokemon";
-import { emptyUrlApi, api } from "./api";
+import { PokemonCompiled } from "../types/Pokemon";
+import { api, getPokeApiPokemonPath } from "./api";
+import { parsePokemonCompiled } from "../validation/pokemon";
 
-type PokemonListResponse = {
-    count: number;
-    results: Pokemon[];
+const DEFAULT_LIMIT = 40;
+const MAX_LIMIT = 100;
+const MAX_OFFSET = 100_000;
+
+const normalizeLimit = (limit: number): number => {
+    if (!Number.isSafeInteger(limit)) return DEFAULT_LIMIT;
+    return Math.min(MAX_LIMIT, Math.max(1, limit));
 };
 
-type PokemonDetailsResponse = {
-    sprites: {
-        front_default: string | null;
-    };
-    types: TypeInfo[];
-    base_experience: number | null;
+const normalizeOffset = (offset: number): number => {
+    if (!Number.isSafeInteger(offset)) return 0;
+    return Math.min(MAX_OFFSET, Math.max(0, offset));
 };
 
-// PokeAPI returns the collection in Pokédex order and has no sort parameter.
-// A collator gives a predictable, case-insensitive alphabetical order and puts
-// numbered names in the order users generally expect (for example, porygon2
-// before porygon-z).
-const pokemonNameCollator = new Intl.Collator("en", {
-    sensitivity: "base",
-    numeric: true,
-});
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
 
-export function sortPokemonByName(pokemon: Pokemon[]): Pokemon[] {
-    return [...pokemon].sort((first, second) => {
-        const nameComparison = pokemonNameCollator.compare(first.name, second.name);
-
-        // Keep the comparator deterministic even if two names differ only by
-        // case or punctuation ignored by the collator.
-        return nameComparison || first.name.localeCompare(second.name);
-    });
-}
-
-let sortedPokemonCatalog: Promise<Pokemon[]> | null = null;
-const pokemonDetailsCache = new Map<string, Promise<PokemonCompiled>>();
-
-async function getSortedPokemonCatalog(): Promise<Pokemon[]> {
-    if (sortedPokemonCatalog) return sortedPokemonCatalog;
-
-    sortedPokemonCatalog = (async () => {
-        // First get the count, then request the complete lightweight catalog.
-        // Details are still fetched only for the visible page below.
-        const countResponse = await api.get<PokemonListResponse>("/pokemon?limit=1&offset=0");
-        if (countResponse.status !== 200) {
-            throw new Error("Failed to fetch pokemon count");
-        }
-
-        const { count, results: firstResults } = countResponse.data;
-        const catalogResponse = firstResults.length === count
-            ? countResponse
-            : await api.get<PokemonListResponse>(`/pokemon?limit=${count}&offset=0`);
-
-        if (catalogResponse.status !== 200) {
-            throw new Error("Failed to fetch pokemon catalog");
-        }
-
-        return sortPokemonByName(catalogResponse.data.results);
-    })().catch((error) => {
-        // Allow a later render to retry if the catalog request failed.
-        sortedPokemonCatalog = null;
-        throw error;
-    });
-
-    return sortedPokemonCatalog;
-}
-
-async function getPokemonDetails(item: Pokemon): Promise<PokemonCompiled> {
-    const cachedDetails = pokemonDetailsCache.get(item.url);
-    if (cachedDetails) return cachedDetails;
-
-    const detailsPromise = emptyUrlApi.get<PokemonDetailsResponse>(item.url)
-        .then((statsResponse) => {
-            if (statsResponse.status !== 200) {
-                throw new Error(`Failed to fetch pokemon stats for ${item.name}`);
-            }
-
-            return {
-                name: item.name,
-                sprite: statsResponse.data.sprites.front_default ?? "",
-                types: statsResponse.data.types ?? [],
-                exp: statsResponse.data.base_experience ?? 0,
-                chosen: false,
-            };
-        })
-        .catch((error) => {
-            // A transient detail failure should not poison the cache forever.
-            pokemonDetailsCache.delete(item.url);
-            throw error;
-        });
-
-    pokemonDetailsCache.set(item.url, detailsPromise);
-    return detailsPromise;
-}
-
-const getlistOfPokemon = async (
-    limit: number,
-    offset: number,
-    sortBy: PokemonSort = "pokedex",
-) => {
-    let results: Pokemon[];
-
-    if (sortBy === "name") {
-        const catalog = await getSortedPokemonCatalog();
-        results = catalog.slice(offset, offset + limit);
-    } else {
-        const res = await api.get<PokemonListResponse>(`/pokemon?limit=${limit}&offset=${offset}`);
-        if (res.status !== 200) {
-            throw new Error("Failed to fetch pokemon list");
-        }
-        results = res.data.results;
+const getlistOfPokemon = async (limit: number, offset: number) => {
+    const safeLimit = normalizeLimit(limit);
+    const safeOffset = normalizeOffset(offset);
+    const res  = await api.get(`/pokemon?limit=${safeLimit}&offset=${safeOffset}`);
+    if (res.status !== 200) {
+        throw new Error("Failed to fetch pokemon list");
+    }
+    const data: unknown = res.data;
+    if (!isRecord(data) || !Array.isArray(data.results)) {
+        throw new Error("Failed to fetch pokemon list");
     }
 
-    const compiledList = await Promise.all(results.map(getPokemonDetails));
+    const compiledResults = await Promise.all(data.results.map(async (item): Promise<PokemonCompiled | null> => {
+        try {
+            if (!isRecord(item) || typeof item.name !== "string" || typeof item.url !== "string") {
+                return null;
+            }
+
+            const pokemonPath = getPokeApiPokemonPath(item.url);
+            const statsResponse = await api.get(pokemonPath);
+            if (statsResponse.status !== 200) return null;
+
+            const responseData: unknown = statsResponse.data;
+            if (!isRecord(responseData) || !isRecord(responseData.sprites)) return null;
+
+            const baseExperience = responseData.base_experience;
+            return parsePokemonCompiled({
+                name: item.name,
+                sprite: typeof responseData.sprites.front_default === "string"
+                    ? responseData.sprites.front_default
+                    : "",
+                types: responseData.types,
+                exp: typeof baseExperience === "number" && Number.isSafeInteger(baseExperience) && baseExperience >= 0
+                    ? baseExperience
+                    : 0,
+                chosen: false,
+            });
+        } catch {
+            return null;
+        }
+    }));
+
+    const compiledList = compiledResults.filter(
+        (pokemon): pokemon is PokemonCompiled => pokemon !== null
+    );
 
     return compiledList;
 }
 
-export { getlistOfPokemon };
+export {  getlistOfPokemon };

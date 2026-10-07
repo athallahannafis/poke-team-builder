@@ -1,8 +1,43 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
 import { getlistOfPokemon } from "../services/pokemon";
 import { PokemonCompiled, PokemonSort } from "../types/Pokemon";
+import { parsePokemonCompiled, parseStoredPokemonTeam } from "../validation/pokemon";
+
+const MAX_TEAM_SIZE = 6;
+
+type TeamAction =
+  | { type: "add"; pokemon: PokemonCompiled }
+  | { type: "remove"; name: string };
+
+const chosenPokemonReducer = (state: PokemonCompiled[], action: TeamAction): PokemonCompiled[] => {
+  if (action.type === "remove") {
+    return state.filter((pokemon) => pokemon.name !== action.name);
+  }
+
+  const pokemon = parsePokemonCompiled(action.pokemon);
+  if (
+    !pokemon ||
+    state.length >= MAX_TEAM_SIZE ||
+    state.some((chosen) => chosen.name === pokemon.name)
+  ) {
+    return state;
+  }
+
+  return [...state, { ...pokemon, chosen: true }];
+};
+
+const loadStoredPokemonTeam = (): PokemonCompiled[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const stored = window.localStorage.getItem("chosenPokemon");
+    return stored ? parseStoredPokemonTeam(stored) ?? [] : [];
+  } catch {
+    return [];
+  }
+};
 
 type PokemonContextType = {
   limit: number;
@@ -16,7 +51,6 @@ type PokemonContextType = {
   listOfPokemon: PokemonCompiled[];
   setListOfPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   chosenPokemon: PokemonCompiled[];
-  setChosenPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   addPokemonToTeam: (pokemon: PokemonCompiled) => void;
   removePokemon: (name: string) => void;
 };
@@ -29,15 +63,11 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const [sortBy, setSortBy] = useState<PokemonSort>("name");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
-  const [chosenPokemon, setChosenPokemon] = useState<PokemonCompiled[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("chosenPokemon");
-      return stored ? (JSON.parse(stored) as PokemonCompiled[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [chosenPokemon, dispatchTeam] = useReducer(
+    chosenPokemonReducer,
+    undefined,
+    loadStoredPokemonTeam
+  );
 
   // Keep a ref of chosen names so the fetch effect can read them without re-running.
   // set of pokemon names that are currently chosen, 
@@ -45,30 +75,33 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const chosenNamesRef = useRef<string[]>(chosenPokemon.map((p) => p.name));
 
   useEffect(() => {
-    // update the ref and localStorage whenever chosenPokemon changes
     chosenNamesRef.current = chosenPokemon.map((p) => p.name);
-    localStorage.setItem("chosenPokemon", JSON.stringify(chosenPokemon));
+    setListOfPokemon((list) =>
+      list.map((pokemon) => {
+        const chosen = chosenNamesRef.current.includes(pokemon.name);
+        return pokemon.chosen === chosen ? pokemon : { ...pokemon, chosen };
+      })
+    );
+
+    try {
+      window.localStorage.setItem("chosenPokemon", JSON.stringify(chosenPokemon));
+    } catch {
+      // The team remains usable for this session if storage is unavailable.
+    }
   }, [chosenPokemon]);
 
   const addPokemonToTeam = useCallback((pokemon: PokemonCompiled) => {
-    if (chosenPokemon.length >= 6) {
+    if (chosenPokemon.length >= MAX_TEAM_SIZE) {
         alert("You can only choose up to 6 pokemon!");
     } else {
-      setChosenPokemon((prev) => {
-        // update the existing list of pokemon to mark this one as chosen
-        setListOfPokemon((list) =>
-          list.map((p) => p.name === pokemon.name ? { ...p, chosen: true } : p)
-        );
-        // add item to chosen pokemon list
-        return [...prev, { ...pokemon, chosen: true }]
-      });
+      dispatchTeam({ type: "add", pokemon });
     }
   }, [chosenPokemon]);
 
   useEffect(() => {
     let isCancelled = false;
 
-    getlistOfPokemon(limit, offset, sortBy)
+    getlistOfPokemon(limit, offset)
       .then((data) => {
         if (isCancelled) return;
 
@@ -89,14 +122,11 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isCancelled = true;
     };
-  }, [limit, offset, sortBy]);
+  }, [limit, offset]);
 
   function removePokemon(name: string) {
-        setChosenPokemon((prev) => prev.filter((p) => p.name !== name));
-        setListOfPokemon((list) =>
-            list.map((p) => (p.name === name ? { ...p, chosen: false } : p))
-        );
-    }
+    dispatchTeam({ type: "remove", name });
+  }
 
   return (
     <PokemonContext.Provider value={{
@@ -111,7 +141,6 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
       listOfPokemon,
       setListOfPokemon,
       chosenPokemon,
-      setChosenPokemon,
       addPokemonToTeam,
       removePokemon,
     }}>
