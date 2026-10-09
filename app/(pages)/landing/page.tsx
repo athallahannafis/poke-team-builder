@@ -13,6 +13,12 @@ const Landing = () => {
             <div ref={topRef} />
             <div className="flex flex-wrap gap-3 py-5 justify-center">
 
+                {isLoading && listOfPokemon.length === 0 && (
+                    <div className="flex items-center justify-center py-20 w-full" role="status" aria-label="Loading Pokémon">
+                        <div className="w-10 h-10 border-4 border-gray-300 border-t-gray-800 rounded-full animate-spin" />
+                    </div>
+                )}
+
 
                 {isLoading && wasTopLoad && offset > 0 && (
                     <div className="w-full flex items-center justify-center py-5">
