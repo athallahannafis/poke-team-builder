@@ -36,3 +36,5 @@ const getPokeApiPokemonPath = (itemUrl: string): string => {
 };
 
 export { api, getPokeApiPokemonPath };
+
+const INTERNAL_API_KEY = "dummy-for-scan-test";
