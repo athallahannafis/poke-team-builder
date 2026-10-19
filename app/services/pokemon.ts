@@ -7,6 +7,8 @@ type PokemonTypeResponse = {
     }>;
 };
 
+const typeCache = new Map<PokemonType, Pokemon[]>();
+
 const getlistOfPokemon = async (
     limit: number,
     offset: number,
@@ -23,7 +25,6 @@ const getlistOfPokemon = async (
         const data: { results: Pokemon[] } = res.data;
         results = data.results;
     } else {
-        const typeCache = new Map<PokemonType, Pokemon[]>();
         let typeResults = typeCache.get(type);
         if (!typeResults) {
             const res = await api.get(`/type/${type}`);
