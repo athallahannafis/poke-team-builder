@@ -23,15 +23,18 @@ const getlistOfPokemon = async (
         const data: { results: Pokemon[] } = res.data;
         results = data.results;
     } else {
-        const res = await api.get(`/type/${type}`);
-        if (res.status !== 200) {
-            throw new Error("Failed to fetch pokemon by type");
-        }
+        let typeResults = typeCache.get(type);
+        if (!typeResults) {
+            const res = await api.get(`/type/${type}`);
+            if (res.status !== 200) {
+                throw new Error("Failed to fetch pokemon by type");
+            }
 
-        const data: PokemonTypeResponse = res.data;
-        results = data.pokemon
-            .slice(offset, offset + limit)
-            .map(({ pokemon }) => pokemon);
+            const data: PokemonTypeResponse = res.data;
+            typeResults = data.pokemon.map(({ pokemon }) => pokemon);
+            typeCache.set(type, typeResults);
+        }
+        results = typeResults.slice(offset, offset + limit);
     }
 
     const compiledList: PokemonCompiled[] = await Promise.all(results.map(async(item) => {

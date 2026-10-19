@@ -9,7 +9,11 @@ const PokemonFilter = () => {
     const { typeFilter, setTypeFilter, setOffset, setIsLoading } = usePokemonContext();
 
     function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
-        const nextFilter = event.target.value as PokemonFilterValue;
+        const value = event.target.value;
+        const nextFilter: PokemonFilterValue =
+            value === "all" || (POKEMON_TYPES as readonly string[]).includes(value)
+                ? (value as PokemonFilterValue)
+                : "all";
         setIsLoading(true);
         setTypeFilter(nextFilter);
         setOffset(0);
