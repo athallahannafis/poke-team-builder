@@ -24,6 +24,7 @@ const getlistOfPokemon = async (
         results = data.results;
     } else {
         let typeResults = typeCache.get(type);
+        const typeCache = new Map<PokemonType, Pokemon[]>();
         if (!typeResults) {
             const res = await api.get(`/type/${type}`);
             if (res.status !== 200) {
