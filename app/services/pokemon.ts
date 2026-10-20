@@ -1,64 +1,58 @@
-import { PokemonCompiled } from "../types/Pokemon";
-import { api, getPokeApiPokemonPath } from "./api";
+import { Pokemon, PokemonCompiled, PokemonType } from "../types/Pokemon";
 import { parsePokemonCompiled } from "../validation/pokemon";
+import { api, getPokeApiPokemonPath } from "./api";
 
-const DEFAULT_LIMIT = 40;
-const MAX_LIMIT = 100;
-const MAX_OFFSET = 100_000;
-
-const normalizeLimit = (limit: number): number => {
-    if (!Number.isSafeInteger(limit)) return DEFAULT_LIMIT;
-    return Math.min(MAX_LIMIT, Math.max(1, limit));
+type PokemonTypeResponse = {
+    pokemon: Array<{
+        pokemon: Pokemon;
+    }>;
 };
 
-const normalizeOffset = (offset: number): number => {
-    if (!Number.isSafeInteger(offset)) return 0;
-    return Math.min(MAX_OFFSET, Math.max(0, offset));
-};
+const typeCache = new Map<PokemonType, Pokemon[]>();
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-    typeof value === "object" && value !== null && !Array.isArray(value);
+const getlistOfPokemon = async (
+    limit: number,
+    offset: number,
+    type: PokemonType | "all" = "all",
+) => {
+    let results: Pokemon[];
 
-const getlistOfPokemon = async (limit: number, offset: number) => {
-    const safeLimit = normalizeLimit(limit);
-    const safeOffset = normalizeOffset(offset);
-    const res  = await api.get(`/pokemon?limit=${safeLimit}&offset=${safeOffset}`);
-    if (res.status !== 200) {
-        throw new Error("Failed to fetch pokemon list");
-    }
-    const data: unknown = res.data;
-    if (!isRecord(data) || !Array.isArray(data.results)) {
-        throw new Error("Failed to fetch pokemon list");
-    }
+    if (type === "all") {
+        const res = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
+        if (res.status !== 200) {
+            throw new Error("Failed to fetch pokemon list");
+        }
 
-    const compiledResults = await Promise.all(data.results.map(async (item): Promise<PokemonCompiled | null> => {
-        try {
-            if (!isRecord(item) || typeof item.name !== "string" || typeof item.url !== "string") {
-                return null;
+        const data: { results: Pokemon[] } = res.data;
+        results = data.results;
+    } else {
+        let typeResults = typeCache.get(type);
+        if (!typeResults) {
+            const res = await api.get(`/type/${type}`);
+            if (res.status !== 200) {
+                throw new Error("Failed to fetch pokemon by type");
             }
 
-            const pokemonPath = getPokeApiPokemonPath(item.url);
-            const statsResponse = await api.get(pokemonPath);
-            if (statsResponse.status !== 200) return null;
-
-            const responseData: unknown = statsResponse.data;
-            if (!isRecord(responseData) || !isRecord(responseData.sprites)) return null;
-
-            const baseExperience = responseData.base_experience;
-            return parsePokemonCompiled({
-                name: item.name,
-                sprite: typeof responseData.sprites.front_default === "string"
-                    ? responseData.sprites.front_default
-                    : "",
-                types: responseData.types,
-                exp: typeof baseExperience === "number" && Number.isSafeInteger(baseExperience) && baseExperience >= 0
-                    ? baseExperience
-                    : 0,
-                chosen: false,
-            });
-        } catch {
-            return null;
+            const data: PokemonTypeResponse = res.data;
+            typeResults = data.pokemon.map(({ pokemon }) => pokemon);
+            typeCache.set(type, typeResults);
         }
+        results = typeResults.slice(offset, offset + limit);
+    }
+
+    const compiledResults = await Promise.all(results.map(async (item) => {
+        const statsResponse = await api.get(getPokeApiPokemonPath(item.url));
+        if (statsResponse.status !== 200) {
+            throw new Error("Failed to fetch pokemon stats");
+        }
+
+        return parsePokemonCompiled({
+            name: item.name,
+            sprite: statsResponse.data.sprites?.front_default ?? "",
+            types: statsResponse.data.types ?? [],
+            exp: statsResponse.data.base_experience ?? 0,
+            chosen: false,
+        });
     }));
 
     const compiledList = compiledResults.filter(
