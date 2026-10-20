@@ -1,5 +1,6 @@
-import { Pokemon, PokemonCompiled, PokemonStats, PokemonType } from "../types/Pokemon";
-import { emptyUrlApi, api } from "./api";
+import { Pokemon, PokemonCompiled, PokemonType } from "../types/Pokemon";
+import { parsePokemonCompiled } from "../validation/pokemon";
+import { api, getPokeApiPokemonPath } from "./api";
 
 type PokemonTypeResponse = {
     pokemon: Array<{
