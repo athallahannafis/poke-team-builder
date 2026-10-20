@@ -49,3 +49,5 @@ export const POKEMON_TYPES = [
 ] as const;
 
 export type PokemonType = typeof POKEMON_TYPES[number];
+
+export type PokemonTypeFilter = PokemonType | "all";

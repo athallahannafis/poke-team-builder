@@ -2,9 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { getlistOfPokemon } from "../services/pokemon";
-import { PokemonCompiled, PokemonType } from "../types/Pokemon";
+import { PokemonCompiled, PokemonType, PokemonTypeFilter } from "../types/Pokemon";
 
-export type PokemonFilter = PokemonType | "all";
 
 type PokemonContextType = {
   limit: number;

@@ -1,4 +1,4 @@
-import { Pokemon, PokemonCompiled, PokemonStats, PokemonType } from "../types/Pokemon";
+import { Pokemon, PokemonCompiled, PokemonStats, PokemonType, PokemonTypeFilter } from "../types/Pokemon";
 import { emptyUrlApi, api } from "./api";
 
 type PokemonTypeResponse = {
