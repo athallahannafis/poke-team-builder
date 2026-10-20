@@ -39,11 +39,19 @@ const getlistOfPokemon = async (
         results = typeResults.slice(offset, offset + limit);
     }
 
-    const compiledList: PokemonCompiled[] = await Promise.all(results.map(async(item) => {
-        const statsResponse = await emptyUrlApi.get(item.url);
+    const compiledResults = await Promise.all(results.map(async (item) => {
+        const statsResponse = await api.get(getPokeApiPokemonPath(item.url));
         if (statsResponse.status !== 200) {
             throw new Error("Failed to fetch pokemon stats");
         }
+
+        return parsePokemonCompiled({
+            name: item.name,
+            sprite: statsResponse.data.sprites?.front_default ?? "",
+            types: statsResponse.data.types ?? [],
+            exp: statsResponse.data.base_experience ?? 0,
+            chosen: false,
+        });
     }));
 
     const compiledList = compiledResults.filter(
