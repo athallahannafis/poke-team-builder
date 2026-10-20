@@ -39,20 +39,11 @@ const getlistOfPokemon = async (
         if (statsResponse.status !== 200) {
             throw new Error("Failed to fetch pokemon stats");
         }
-        const statsData: PokemonStats = {
-            sprite: statsResponse.data.sprites.front_default ?? "",
-            types: statsResponse.data.types ?? [],
-            exp: statsResponse.data.base_experience ?? 0,
-        };
-        
-        return {
-            name: item.name,
-            sprite: statsData.sprite ?? "",
-            types: statsData.types ?? [],
-            exp: statsData.exp ?? 0,
-            chosen: false,
-        };
     }));
+
+    const compiledList = compiledResults.filter(
+        (pokemon): pokemon is PokemonCompiled => pokemon !== null
+    );
 
     return compiledList;
 }
