@@ -2,9 +2,9 @@
 import Image from "next/image";
 import Landing from "./(pages)/landing/page";
 import { usePokemonContext } from "./context/PokemonContext";
-import TeamFooter from "./component/TeamFooter";
 import pokeball from "@/public/pokeball.svg";
 import ButtonFooter from "./component/ButtonFooter";
+import PokemonFilter from "./component/PokemonFilter";
 
 export default function RootContent() {
   const {chosenPokemon} = usePokemonContext();
@@ -17,6 +17,7 @@ export default function RootContent() {
           {chosenPokemon.length}
         </div>
       </nav>
+      <PokemonFilter />
       <Landing/>
       {/* <TeamFooter/> */}
       <ButtonFooter/>
