@@ -3,6 +3,41 @@
 import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
 import { getlistOfPokemon } from "../services/pokemon";
 import { PokemonCompiled, PokemonType } from "../types/Pokemon";
+import { parsePokemonCompiled, parseStoredPokemonTeam } from "../validation/pokemon";
+
+const MAX_TEAM_SIZE = 6;
+
+type TeamAction =
+  | { type: "add"; pokemon: PokemonCompiled }
+  | { type: "remove"; name: string };
+
+const chosenPokemonReducer = (state: PokemonCompiled[], action: TeamAction): PokemonCompiled[] => {
+  if (action.type === "remove") {
+    return state.filter((pokemon) => pokemon.name !== action.name);
+  }
+
+  const pokemon = parsePokemonCompiled(action.pokemon);
+  if (
+    !pokemon ||
+    state.length >= MAX_TEAM_SIZE ||
+    state.some((chosen) => chosen.name === pokemon.name)
+  ) {
+    return state;
+  }
+
+  return [...state, { ...pokemon, chosen: true }];
+};
+
+const loadStoredPokemonTeam = (): PokemonCompiled[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const stored = window.localStorage.getItem("chosenPokemon");
+    return stored ? parseStoredPokemonTeam(stored) ?? [] : [];
+  } catch {
+    return [];
+  }
+};
 
 export type PokemonFilter = PokemonType | "all";
 
@@ -16,9 +51,8 @@ type PokemonContextType = {
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   listOfPokemon: PokemonCompiled[];
-  setListOfPokemon: React.Dispatch<React.SetStateAction<PokemonCompiled[]>>;
   chosenPokemon: PokemonCompiled[];
-  addPokemonToTeam: (pokemon: PokemonCompiled) => void;
+  addPokemon: (pokemon: PokemonCompiled) => void;
   removePokemon: (name: string) => void;
 };
 
@@ -32,7 +66,7 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
   const [chosenPokemon, dispatchTeam] = useReducer(
     chosenPokemonReducer,
-    undefined,
+    [],
     loadStoredPokemonTeam
   );
 

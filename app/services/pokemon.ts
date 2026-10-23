@@ -34,15 +34,22 @@ const getlistOfPokemon = async (
             .map(({ pokemon }) => pokemon);
     }
 
-    const compiledList: PokemonCompiled[] = await Promise.all(results.map(async(item) => {
-        const statsResponse = await emptyUrlApi.get(item.url);
-        if (statsResponse.status !== 200) {
-            throw new Error("Failed to fetch pokemon stats");
-        }
-    }));
+    const compiledList: PokemonCompiled[] = await Promise.all(
+        results.map(async (item): Promise<PokemonCompiled> => {
+            const statsResponse = await emptyUrlApi.get(item.url);
+            if (statsResponse.status !== 200) {
+                throw new Error("Failed to fetch pokemon stats");
+            }
 
-    const compiledList = compiledResults.filter(
-        (pokemon): pokemon is PokemonCompiled => pokemon !== null
+            const data = statsResponse.data;
+            return {
+                name: item.name,
+                sprite: data?.sprites?.front_default ?? "",
+                types: data?.types ?? [],
+                exp: typeof data?.base_experience === "number" ? data.base_experience : 0,
+                chosen: false,
+            };
+        })
     );
 
     return compiledList;
