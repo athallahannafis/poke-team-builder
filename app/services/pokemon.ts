@@ -1,63 +1,43 @@
-import { PokemonCompiled } from "../types/Pokemon";
-import { api, getPokeApiPokemonPath } from "./api";
-import { parsePokemonCompiled } from "../validation/pokemon";
+import { Pokemon, PokemonCompiled, PokemonStats, PokemonType } from "../types/Pokemon";
+import { emptyUrlApi, api } from "./api";
 
-const DEFAULT_LIMIT = 40;
-const MAX_LIMIT = 100;
-const MAX_OFFSET = 100_000;
-
-const normalizeLimit = (limit: number): number => {
-    if (!Number.isSafeInteger(limit)) return DEFAULT_LIMIT;
-    return Math.min(MAX_LIMIT, Math.max(1, limit));
+type PokemonTypeResponse = {
+    pokemon: Array<{
+        pokemon: Pokemon;
+    }>;
 };
 
-const normalizeOffset = (offset: number): number => {
-    if (!Number.isSafeInteger(offset)) return 0;
-    return Math.min(MAX_OFFSET, Math.max(0, offset));
-};
+const getlistOfPokemon = async (
+    limit: number,
+    offset: number,
+    type: PokemonType | "all" = "all",
+) => {
+    let results: Pokemon[];
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-    typeof value === "object" && value !== null && !Array.isArray(value);
+    if (type === "all") {
+        const res = await api.get(`/pokemon?limit=${limit}&offset=${offset}`);
+        if (res.status !== 200) {
+            throw new Error("Failed to fetch pokemon list");
+        }
 
-const getlistOfPokemon = async (limit: number, offset: number) => {
-    const safeLimit = normalizeLimit(limit);
-    const safeOffset = normalizeOffset(offset);
-    const res  = await api.get(`/pokemon?limit=${safeLimit}&offset=${safeOffset}`);
-    if (res.status !== 200) {
-        throw new Error("Failed to fetch pokemon list");
+        const data: { results: Pokemon[] } = res.data;
+        results = data.results;
+    } else {
+        const res = await api.get(`/type/${type}`);
+        if (res.status !== 200) {
+            throw new Error(`Failed to fetch pokemon by type: ${type}`);
+        }
+
+        const data: PokemonTypeResponse = res.data;
+        results = data.pokemon
+            .slice(offset, offset + limit)
+            .map(({ pokemon }) => pokemon);
     }
-    const data: unknown = res.data;
-    if (!isRecord(data) || !Array.isArray(data.results)) {
-        throw new Error("Failed to fetch pokemon list");
-    }
 
-    const compiledResults = await Promise.all(data.results.map(async (item): Promise<PokemonCompiled | null> => {
-        try {
-            if (!isRecord(item) || typeof item.name !== "string" || typeof item.url !== "string") {
-                return null;
-            }
-
-            const pokemonPath = getPokeApiPokemonPath(item.url);
-            const statsResponse = await api.get(pokemonPath);
-            if (statsResponse.status !== 200) return null;
-
-            const responseData: unknown = statsResponse.data;
-            if (!isRecord(responseData) || !isRecord(responseData.sprites)) return null;
-
-            const baseExperience = responseData.base_experience;
-            return parsePokemonCompiled({
-                name: item.name,
-                sprite: typeof responseData.sprites.front_default === "string"
-                    ? responseData.sprites.front_default
-                    : "",
-                types: responseData.types,
-                exp: typeof baseExperience === "number" && Number.isSafeInteger(baseExperience) && baseExperience >= 0
-                    ? baseExperience
-                    : 0,
-                chosen: false,
-            });
-        } catch {
-            return null;
+    const compiledList: PokemonCompiled[] = await Promise.all(results.map(async(item) => {
+        const statsResponse = await emptyUrlApi.get(item.url);
+        if (statsResponse.status !== 200) {
+            throw new Error("Failed to fetch pokemon stats");
         }
     }));
 
