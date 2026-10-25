@@ -8,12 +8,12 @@ const formatTypeName = (type: string) => type.charAt(0).toUpperCase() + type.sli
 const PokemonFilter = () => {
     const { typeFilter, setTypeFilter, setOffset, setIsLoading } = usePokemonContext();
 
-    function handleChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const handleChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
         const nextFilter = event.target.value as PokemonFilterValue;
         setIsLoading(true);
         setTypeFilter(nextFilter);
         setOffset(0);
-    }
+    }, [setIsLoading, setTypeFilter, setOffset]);
 
     return (
         <div className="border-b border-zinc-200 bg-white px-4 py-3">
