@@ -2,48 +2,17 @@
 
 import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
 import { getlistOfPokemon } from "../services/pokemon";
-import { PokemonCompiled } from "../types/Pokemon";
-import { parsePokemonCompiled, parseStoredPokemonTeam } from "../validation/pokemon";
+import { PokemonCompiled, PokemonType } from "../types/Pokemon";
 
-const MAX_TEAM_SIZE = 6;
-
-type TeamAction =
-  | { type: "add"; pokemon: PokemonCompiled }
-  | { type: "remove"; name: string };
-
-const chosenPokemonReducer = (state: PokemonCompiled[], action: TeamAction): PokemonCompiled[] => {
-  if (action.type === "remove") {
-    return state.filter((pokemon) => pokemon.name !== action.name);
-  }
-
-  const pokemon = parsePokemonCompiled(action.pokemon);
-  if (
-    !pokemon ||
-    state.length >= MAX_TEAM_SIZE ||
-    state.some((chosen) => chosen.name === pokemon.name)
-  ) {
-    return state;
-  }
-
-  return [...state, { ...pokemon, chosen: true }];
-};
-
-const loadStoredPokemonTeam = (): PokemonCompiled[] => {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const stored = window.localStorage.getItem("chosenPokemon");
-    return stored ? parseStoredPokemonTeam(stored) ?? [] : [];
-  } catch {
-    return [];
-  }
-};
+export type PokemonFilter = PokemonType | "all";
 
 type PokemonContextType = {
   limit: number;
   setLimit: React.Dispatch<React.SetStateAction<number>>;
   offset: number;
   setOffset: React.Dispatch<React.SetStateAction<number>>;
+  typeFilter: PokemonFilter;
+  setTypeFilter: React.Dispatch<React.SetStateAction<PokemonFilter>>;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   listOfPokemon: PokemonCompiled[];
@@ -58,6 +27,7 @@ const PokemonContext = createContext<PokemonContextType | null>(null);
 export function PokemonProvider({ children }: { children: React.ReactNode }) {  
   const [limit, setLimit] = useState<number>(40);
   const [offset, setOffset] = useState<number>(0);
+  const [typeFilter, setTypeFilter] = useState<PokemonFilter>("all");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [listOfPokemon, setListOfPokemon] = useState<PokemonCompiled[]>([]);
   const [chosenPokemon, dispatchTeam] = useReducer(
@@ -96,8 +66,12 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   }, [chosenPokemon]);
 
   useEffect(() => {
-    getlistOfPokemon(limit,offset)
-      .then((data) =>
+    let isCancelled = false;
+
+    getlistOfPokemon(limit, offset, typeFilter)
+      .then((data) => {
+        if (isCancelled) return;
+
         /** 
          * after fetching data, check chosen pokemon (from localstorage)
          * based on set of chosenNamesRef set, and update the chosen flag
@@ -105,11 +79,17 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
          */
         setListOfPokemon(
           data.map((p) => ({ ...p, chosen: chosenNamesRef.current.includes(p.name) }))
-        )
-      )
+        );
+      })
       .catch((err) => console.error("Failed to fetch pokemon list:", err))
-      .finally(() => setIsLoading(false));
-  }, [limit, offset]);
+      .finally(() => {
+        if (!isCancelled) setIsLoading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [limit, offset, typeFilter]);
 
   function removePokemon(name: string) {
     dispatchTeam({ type: "remove", name });
@@ -121,6 +101,8 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
       setLimit,
       offset,
       setOffset,
+      typeFilter,
+      setTypeFilter,
       isLoading,
       setIsLoading,
       listOfPokemon,
