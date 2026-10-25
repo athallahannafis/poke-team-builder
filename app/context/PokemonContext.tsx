@@ -66,29 +66,22 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   }, [chosenPokemon]);
 
   useEffect(() => {
-    let isCancelled = false;
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-    getlistOfPokemon(limit, offset, typeFilter)
+    getlistOfPokemon(limit, offset, typeFilter, signal)
       .then((data) => {
-        if (isCancelled) return;
-
-        /** 
-         * after fetching data, check chosen pokemon (from localstorage)
-         * based on set of chosenNamesRef set, and update the chosen flag
-         * from listOfPokemon accordingly
-         */
         setListOfPokemon(
           data.map((p) => ({ ...p, chosen: chosenNamesRef.current.includes(p.name) }))
         );
       })
-      .catch((err) => console.error("Failed to fetch pokemon list:", err))
-      .finally(() => {
-        if (!isCancelled) setIsLoading(false);
-      });
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        console.error("Failed to fetch pokemon list:", err);
+      })
+      .finally(() => setIsLoading(false));
 
-    return () => {
-      isCancelled = true;
-    };
+    return () => controller.abort();
   }, [limit, offset, typeFilter]);
 
   function removePokemon(name: string) {

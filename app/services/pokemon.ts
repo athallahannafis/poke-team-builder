@@ -25,7 +25,7 @@ const getlistOfPokemon = async (
     } else {
         const res = await api.get(`/type/${type}`);
         if (res.status !== 200) {
-            throw new Error("Failed to fetch pokemon by type");
+            throw new Error(`Failed to fetch pokemon by type: ${type}`);
         }
 
         const data: PokemonTypeResponse = res.data;
