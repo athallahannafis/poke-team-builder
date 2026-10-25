@@ -31,7 +31,8 @@ const getlistOfPokemon = async (
     let results: Pokemon[];
 
     if (type === "all") {
-        const res = await api.get(`/pokemon?limit=${safeLimit}&offset=${safeOffset}`);        if (res.status !== 200) {
+        const res = await api.get(`/pokemon?limit=${safeLimit}&offset=${safeOffset}`);
+        if (res.status !== 200) {
             throw new Error("Failed to fetch pokemon list");
         }
 
@@ -45,7 +46,7 @@ const getlistOfPokemon = async (
 
         const data: PokemonTypeResponse = res.data;
         results = data.pokemon
-            .slice(0, limit)
+            .slice(0, safeLimit)
             .map(({ pokemon }) => pokemon);
     }
 
